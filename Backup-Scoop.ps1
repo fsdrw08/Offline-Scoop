@@ -2,8 +2,8 @@
 scoop cache
 
 if ((Read-Host "Are you sure remove scoop cache? y/N") -eq "y") {
-"remove scoop cache"
-scoop cache rm *
+  "remove scoop cache"
+  scoop cache rm *
 }
 
 "check apps install by scoop"
@@ -31,7 +31,8 @@ if ((Read-Host "Are you sure all scoop apps had closed? y/N") -eq "y") {
     "Remove the `"current`" folder in scoop apps"
     Get-Item $env:USERPROFILE\scoop\apps\*\current | ForEach-Object {
       if ($_.mode -eq "d-r--l") {
-      Remove-Item $_.FullName -Recurse -Force -Confirm:$false
+        fsutil reparsepoint delete $_.FullName
+        Remove-Item $_.FullName -Recurse -Force -Confirm:$false
       }
     }
     
@@ -40,18 +41,20 @@ if ((Read-Host "Are you sure all scoop apps had closed? y/N") -eq "y") {
     
     "add the current folder (softlink) back"
     Get-ChildItem "$env:USERPROFILE\scoop\apps\" | Select-Object -ExpandProperty fullname | ForEach-Object {
-        if ((Get-ChildItem $_ | Select-Object -ExpandProperty name) -notcontains "current") {
-            $Target = Get-ChildItem $_ | Select-Object -First 1 | Select-Object -ExpandProperty fullname
-            New-Item -ItemType Junction -Path "$_\current" -Target $Target
-        }
+      if ((Get-ChildItem $_ | Select-Object -ExpandProperty name) -notcontains "current") {
+        $Target = Get-ChildItem $_ | Select-Object -First 1 | Select-Object -ExpandProperty fullname
+        New-Item -ItemType Junction -Path "$_\current" -Target $Target
+      }
     }
     scoop reset *
     "Backup done, please enter to close the window"
     Pause
-  } else {
-  "You should run `"scoop install 7z`" first"
+  }
+  else {
+    "You should run `"scoop install 7z`" first"
   }
 
-} else {
+}
+else {
   "close the running scoop apps first"
 }
